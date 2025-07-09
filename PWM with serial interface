@@ -1,0 +1,71 @@
+## RC 회로 구성해서 기능 오실로스코프로 검증, LED 연결후 기능 검증
+
+const int pwmPin = 9;
+
+int mode = 0;
+int duty = 0;
+bool goingUp = true;
+bool toggleHigh = true;
+
+unsigned long lastTime = 0;
+
+void setup() {
+  pinMode(pwmPin, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Enter mode: 1 (100%), 2 (0%), 3 (toggle), 4 (fade)");
+}
+
+void loop() {
+  // Read serial input
+  if (Serial.available()) {
+    char input = Serial.read();
+    if (input >= '1' && input <= '4') {
+      mode = input - '0';
+      Serial.print("Selected mode: ");
+      Serial.println(mode);
+    }
+  }
+
+  unsigned long now = millis();
+
+  // Mode 1: 100% duty
+  if (mode == 1) {
+    analogWrite(pwmPin, 255);
+  }
+
+  // Mode 2: 0% duty
+  if (mode == 2) {
+    analogWrite(pwmPin, 0);
+  }
+
+  // Mode 3: Toggle between 100% and 0% every 1 sec
+  if (mode == 3) {
+    if (now - lastTime >= 1000) {
+      lastTime = now;
+      if (toggleHigh) {
+        analogWrite(pwmPin, 255);
+        toggleHigh = false;
+      } else {
+        analogWrite(pwmPin, 0);
+        toggleHigh = true;
+      }
+    }
+  }
+
+  // Mode 4: Fade up/down duty
+  if (mode == 4) {
+    if (now - lastTime >= 20) {
+      lastTime = now;
+
+      analogWrite(pwmPin, map(duty, 0, 100, 0, 255));
+
+      if (goingUp) {
+        duty++;
+        if (duty >= 100) goingUp = false;
+      } else {
+        duty--;
+        if (duty <= 0) goingUp = true;
+      }
+    }
+  }
+}
