@@ -4,6 +4,8 @@
 
 ## RC 회로 구성해서 기능 오실로스코프로 검증, LED 연결후 기능 검증
 
+## https://colab.research.google.com/drive/1_laca8Bf0HREQhDfGscCuobzxPheBrRL?usp=sharing
+
 const int pwmPin = 9;
 
 int mode = 0;
