@@ -3,3 +3,33 @@
 # 여러가지 파형 입력 후 시리얼 인터페이스로 출력해서 그래프 그려볼것
 # 나이퀴스트 샘플링 이론 확인
 # 시리얼 인터페이스 유지하면서 샘플링 레이트 최대치로 유지 최적화
+
+# 1. 함수발생기, 오실로스코프, 아두이노 활용
+# 2. 다양한 파형을 오실로스코프와 아두이노 ADC 값을 그래프로 그려서 비교
+# 3. 샘플링 레이트 바꿔가면서 확인
+
+const int analogPin = A0;
+const unsigned long sampleInterval = 100000; // 100ms = 10Hz
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("time(us),voltage(V)");
+}
+
+void loop() {
+  static unsigned long lastSampleTime = 0;
+  static unsigned long startTime = micros();
+
+  if (micros() - lastSampleTime >= sampleInterval) {
+    lastSampleTime = micros();
+
+    int adcValue = analogRead(analogPin);
+    float voltage = adcValue * 5.0 / 1023.0;  // 전압 계산
+    unsigned long currentTime = micros() - startTime;
+
+    Serial.print(currentTime);
+    Serial.print(",");
+    Serial.println(voltage, 3);  // 소수점 셋째자리까지 출력
+  }
+}
