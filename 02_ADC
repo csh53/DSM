@@ -7,6 +7,7 @@
 # 1. 함수발생기, 오실로스코프, 아두이노 활용
 # 2. 다양한 파형을 오실로스코프와 아두이노 ADC 값을 그래프로 그려서 비교
 # 3. 샘플링 레이트 바꿔가면서 확인 
+# 4. 펑션제네레이터 --> ADC --> DAC --> 오실로스코프 검증
 
 const int analogPin = A0;
 const unsigned long sampleInterval = 100000; // 100ms = 10Hz
