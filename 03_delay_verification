@@ -1,0 +1,53 @@
+# delay 함수 검증하기
+
+# 1. 코드 검증 및 시리얼 통신으로 확인해 보
+# 2. 작동확인
+# 3. 오실로스코프로 검증하기
+# 4. delay_ms(0) 의 작동시간 측정해보기
+# 5. delayMicroseconds() 도 검증해 보
+
+const int OUT_PIN = 8;
+int delayTime = 100;   // 기본 100 ms
+int repeatCount = 0;   // 트리거되면 5로 설정
+
+void setup() {
+  pinMode(OUT_PIN, OUTPUT);
+  digitalWrite(OUT_PIN, LOW);
+
+  Serial.begin(9600);
+  Serial.println("=== delay() 타이밍 검증 ===");
+  Serial.println("0~1000 사이 정수를 입력하세요 (ms). 입력 시 5회 연속 출력.");
+}
+
+void loop() {
+  // 1) 시리얼 입력: 한 줄 단위로 받아 숫자만 사용
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n'); // 엔터까지 읽기
+    input.trim(); // 공백/CR 제거
+
+    if (input.length() > 0) {
+      long v = input.toInt();
+      if (v < 0) v = 0;
+      if (v > 1000) v = 1000;
+
+      delayTime = (int)v;
+      repeatCount = 5; // 5회 연속 출력 트리거
+
+      Serial.print("delay(");
+      Serial.print(delayTime);
+      Serial.println(" ms)로 설정됨");
+    }
+  }
+
+  // 2) 루프 빠져나가기 전에 5회 모두 출력
+  if (repeatCount > 0) {
+    for (int i = 0; i < repeatCount; i++) {
+      digitalWrite(OUT_PIN, HIGH);
+      delay(delayTime);   // HIGH 유지 시간 = delayTime
+      digitalWrite(OUT_PIN, LOW);
+      delay(delayTime);   // LOW 유지 시간 = delayTime
+    }
+    repeatCount = 0;
+    Serial.println("파형 5회 출력 완료, 대기 중...");
+  }
+}
