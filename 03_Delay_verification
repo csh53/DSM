@@ -2,9 +2,9 @@
 
 # 1. 코드 검증
 # 2. 시리얼 통신으로 확인 작동 확인
-# 3. 오실로스코프로 검증하기
-# 4. delay_ms(0) 의 작동시간 측정해보기
-# 5. delayMicroseconds() 도 검증해 보
+# 3. 오실로스코프로 검증
+# 4. delay_ms(0) 의 작동시간 측정
+# 5. delayMicroseconds() 도 검증
 
 const int OUT_PIN = 8;
 int delayTime = 100;   // 기본 100 ms
