@@ -1,0 +1,45 @@
+// D8에서 비트뱅으로 'a'를 만들고, D0(RX0)로 점프 → 하드웨어 UART가 받고 TX0로 에코
+const int BIT_US = 104; // 9600bps
+#define TX_HIGH() (PORTB |=  (1 << PB0))   // D8 HIGH
+#define TX_LOW()  (PORTB &= ~(1 << PB0))   // D8 LOW
+
+void setup() {
+  // D8 출력 설정 (PB0)
+  DDRB |= (1 << PB0);
+  TX_HIGH(); // idle high
+
+  // 하드웨어 UART0 초기화 (시리얼 모니터와 통신)
+  Serial.begin(9600);
+  // 시리얼 모니터도 9600으로 맞추기
+}
+
+void loop() {
+  // 1) 비트뱅으로 'a' 송신 → D8
+  sendCharBitbang('a');
+
+  // 2) 하드웨어 UART가 방금 받은 바이트를 TX0로 에코
+  //    (여기선 보통 'a'가 바로 들어오지만, 일반 에코처럼 모든 수신바이트를 내보냄)
+  while (Serial.available() > 0) {
+    int b = Serial.read();
+    Serial.write((uint8_t)b);
+  }
+
+  delay(500); // 0.5초 간격
+}
+
+void sendCharBitbang(uint8_t c) {
+  // Start bit (LOW)
+  TX_LOW();
+  delayMicroseconds(BIT_US);
+
+  // Data bits (LSB first)
+  for (uint8_t i = 0; i < 8; i++) {
+    if (c & 0x01) TX_HIGH(); else TX_LOW();
+    c >>= 1;
+    delayMicroseconds(BIT_US);
+  }
+
+  // Stop bit (HIGH)
+  TX_HIGH();
+  delayMicroseconds(BIT_US);
+}
