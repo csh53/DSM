@@ -1,0 +1,47 @@
+int num1, num2;
+char op;
+float result;
+const int measurePin = 8;  // 오실로스코프 측정용 핀
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(measurePin, OUTPUT);
+  Serial.println("=== Arduino Calculator (Scope Mode) ===");
+  Serial.println("예: 5 + 3 형식으로 입력 후 엔터");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    num1 = Serial.parseInt();
+    op = Serial.read();
+    num2 = Serial.parseInt();
+
+    // 버퍼 정리
+    while (Serial.available() > 0) {
+      char c = Serial.read();
+      if (c == '\n') break;
+    }
+
+    // 연산 직전 → HIGH (측정 시작)
+    digitalWrite(measurePin, HIGH);
+
+    switch (op) {
+      case '+': result = num1 + num2; break;
+      case '-': result = num1 - num2; break;
+      case '*': result = num1 * num2; break;
+      case '/':
+        if (num2 != 0) result = (float)num1 / num2;
+        else result = NAN; // 0으로 나눌 때
+        break;
+      default: result = NAN; break;
+    }
+
+    // 연산 직후 → LOW (측정 종료)
+    digitalWrite(measurePin, LOW);
+
+    // 결과 출력
+    Serial.print("결과: ");
+    Serial.println(result);
+    Serial.println("-----------------------------");
+  }
+}
