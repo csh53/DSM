@@ -1,0 +1,31 @@
+const int BIT_US = 104; // 9600bps
+#define TX_HIGH() (PORTB |=  (1 << PB0))
+#define TX_LOW()  (PORTB &= ~(1 << PB0))
+
+void setup() {
+  DDRB |= (1 << PB0);  // D8 핀 출력으로 설정
+  TX_HIGH();           // idle 상태 (HIGH)
+}
+
+void loop() {
+  sendChar('a');
+  delay(500);
+}
+
+void sendChar(char c) {
+  // 스타트비트
+  TX_LOW();
+  delayMicroseconds(BIT_US);
+
+  // 데이터 비트 (LSB first)
+  for (int i = 0; i < 8; i++) {
+    if (c & 0x01) TX_HIGH();
+    else TX_LOW();
+    c >>= 1;
+    delayMicroseconds(BIT_US);
+  }
+
+  // 스톱비트
+  TX_HIGH();
+  delayMicroseconds(BIT_US);
+}
