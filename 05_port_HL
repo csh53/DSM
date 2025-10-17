@@ -12,5 +12,6 @@ void loop() {
   PORTB &= ~(1 << PB0); // D8 LOW
 }
 
+// https://blog.timodenk.com/port-manipulation-and-arduino-digitalwrite-performance/?utm_source=chatgpt.com
 // https://electronoobs.com/images/Arduino/tut_130/Register_control.jpg
 // https://cdn.mikroe.com/ebooks/img/2/2016/01/8051-chapter-02-image-002.gif
