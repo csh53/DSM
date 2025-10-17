@@ -7,7 +7,7 @@ void loop() {
   digitalWrite(8, HIGH);
   digitalWrite(8, LOW);
 
-  // B) 포트 직접 접근
+  // B) 레지스터 통한 포트 직접 접근
   PORTB |=  (1 << PB0); // D8 HIGH
   PORTB &= ~(1 << PB0); // D8 LOW
 }
