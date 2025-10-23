@@ -1,0 +1,35 @@
+/*
+  Arduino UNO 메모리 오버플로우 간단 테스트 (byte 출력 버전)
+  ------------------------------------------------------------
+  상단의 ARRAY_SIZE만 바꿔서 테스트하세요.
+  예) 500 → OK, 1000 → 경계, 1500 이상 → 뻗거나 부팅 실패
+*/
+
+#define ARRAY_SIZE 1000   // 테스트할 배열 크기 (int 요소 개수)
+
+int testArray[ARRAY_SIZE];  // 전역 배열 → SRAM 직접 점유
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println();
+  Serial.println("=== 메모리 테스트 시작 ===");
+
+  unsigned long usedBytes = sizeof(testArray);
+  Serial.print("배열 요소 개수: ");
+  Serial.println(ARRAY_SIZE);
+  Serial.print("총 사용 메모리: ");
+  Serial.print(usedBytes);
+  Serial.println(" bytes");
+
+  // 배열에 실제로 접근 (최적화 방지)
+  for (int i = 0; i < ARRAY_SIZE; i++) {
+    testArray[i] = i;
+  }
+
+  Serial.println("✅ 메모리 확보 및 초기화 완료!");
+}
+
+void loop() {
+  Serial.println("정상 실행 중...");
+  delay(1000);
+}
