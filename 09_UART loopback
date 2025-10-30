@@ -1,0 +1,22 @@
+void setup() {
+  Serial.begin(9600);
+  Serial.println("UART Loopback Auto Test Start");
+  delay(1000);
+}
+
+void loop() {
+  // 1초마다 'Hello UART' 전송
+  Serial.println("Hello UART");
+
+  // 송신 후 잠시 대기
+  delay(100);
+
+  // 수신 버퍼 확인
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+    Serial.print("Received: ");
+    Serial.println(c);
+  }
+
+  delay(1000);
+}
