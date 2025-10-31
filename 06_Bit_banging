@@ -1,3 +1,5 @@
+// 8번 핀을 RX로 점프
+
 const int BIT_US = 104; // 9600bps
 #define TX_HIGH() (PORTB |=  (1 << PB0))
 #define TX_LOW()  (PORTB &= ~(1 << PB0))
