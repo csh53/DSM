@@ -1,0 +1,47 @@
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  pinMode(8, OUTPUT);        // D8 출력 설정
+  digitalWrite(8, LOW);      // 🔵 기본 LOW 상태
+}
+
+void loop() {
+
+  // =========================
+  // 1️⃣ Serial.print 방식
+  // =========================
+  PORTB |=  (1 << PB0);   // 🔴 HIGH (측정 시작)
+
+  Serial.print("HELLO");
+  Serial.flush();
+
+  PORTB &= ~(1 << PB0);   // 🔵 LOW (측정 끝)
+
+  Serial.println("  <- Serial");
+
+  delay(1000);
+
+
+  // =========================
+  // 2️⃣ 직접 레지스터 방식
+  // =========================
+  PORTB |=  (1 << PB0);   // 🔴 HIGH (측정 시작)
+
+  const char *msg = "HELLO";
+  while (*msg) {
+    while (!(UCSR0A & (1 << UDRE0)));
+    UDR0 = *msg++;
+  }
+
+  while (!(UCSR0A & (1 << TXC0)));
+  UCSR0A |= (1 << TXC0);
+
+  PORTB &= ~(1 << PB0);   // 🔵 LOW (측정 끝)
+
+  Serial.println("  <- Direct");
+
+  Serial.println("----------------");
+
+  delay(2000);
+}
