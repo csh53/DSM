@@ -1,0 +1,64 @@
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  // D8 (PORTB 0번 비트)을 출력으로 설정하여 타이밍 측정용으로 사용
+  pinMode(8, OUTPUT);
+  digitalWrite(8, LOW);
+  
+  Serial.println("--- Timing Test Start ---");
+}
+
+void loop() {
+  char buffer[32];
+  unsigned char val1 = 0xAB; // 테스트용 데이터
+  unsigned char val2 = 0xCD;
+
+  // ==========================================
+  // 1️⃣ [sprintf 방식] - 인간 친화적, 추상화
+  // ==========================================
+  PORTB |= (1 << PB0); // 🔴 D8 HIGH (측정 시작)
+
+  // 가독성은 좋지만 내부적으로 거대한 라이브러리를 호출함
+  sprintf(buffer, "VAL:%02X%02X", val1, val2);
+
+  PORTB &= ~(1 << PB0); // 🔵 D8 LOW (측정 끝)
+
+  Serial.print("sprintf result: ");
+  Serial.println(buffer); // 출력은 타이밍 측정에서 제외
+
+
+  delay(1000); // 간격 유지
+
+
+  // ==========================================
+  // 2️⃣ [하드코딩 방식] - 기계 친화적, 최적화
+  // ==========================================
+  PORTB |= (1 << PB0); // 🔴 D8 HIGH (측정 시작)
+
+  // 메모리에 직접 꽂아 넣는 방식 (앞서 분석한 코드와 같은 철학)
+  buffer[0] = 'V'; buffer[1] = 'A'; buffer[2] = 'L'; buffer[3] = ':';
+  
+  // 상위 니블 변환
+  unsigned char a = (val1 >> 4) & 0x0F;
+  buffer[4] = (a < 10) ? (a + '0') : (a - 10 + 'A');
+  // 하위 니블 변환
+  a = val1 & 0x0F;
+  buffer[5] = (a < 10) ? (a + '0') : (a - 10 + 'A');
+
+  // val2에 대해서도 동일 반복 (실제 고수들의 코드 스타일)
+  a = (val2 >> 4) & 0x0F;
+  buffer[6] = (a < 10) ? (a + '0') : (a - 10 + 'A');
+  a = val2 & 0x0F;
+  buffer[7] = (a < 10) ? (a + '0') : (a - 10 + 'A');
+  
+  buffer[8] = '\0'; // 널 종료 문자
+
+  PORTB &= ~(1 << PB0); // 🔵 D8 LOW (측정 끝)
+
+  Serial.print("Direct  result: ");
+  Serial.println(buffer); // 출력은 타이밍 측정에서 제외
+
+  Serial.println("-------------------------");
+  delay(2000);
+}
