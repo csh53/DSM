@@ -38,3 +38,4 @@ void loop() {
 }
 
 //https://github.com/arduino/ArduinoCore-avr/blob/master/cores/arduino/Print.cpp
+//https://740280.tistory.com/48 리틀 빅 LSB
