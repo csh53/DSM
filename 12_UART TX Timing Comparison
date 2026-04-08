@@ -3,16 +3,20 @@ void setup() {
     delay(2000);
     pinMode(8, OUTPUT);
     digitalWrite(8, LOW);
+
+    // warm-up
+    Serial.print('A');
+    Serial.flush();
 }
 
 void loop() {
     // =========================
     // 1️⃣ Serial.print 방식
     // =========================
-    PORTB |=  (1 << PB0);       // HIGH (측정 시작)
-    Serial.print("HELLO");
-    Serial.flush();              // 전송 완료까지 대기 (stop bit 포함)
-    PORTB &= ~(1 << PB0);       // LOW  (측정 끝)
+    PORTB |=  (1 << PB0);
+    Serial.print('A');       // 1글자 → 전송시간 약 87µs
+    Serial.flush();
+    PORTB &= ~(1 << PB0);
 
     Serial.println("  <- Serial");
     delay(1000);
@@ -20,18 +24,14 @@ void loop() {
     // =========================
     // 2️⃣ 직접 레지스터 방식
     // =========================
-    const char *msg = "HELLO";  // 측정 구간 밖으로 이동
+    PORTB |=  (1 << PB0);
+    while (!(UCSR0A & (1 << UDRE0)));  // 버퍼 대기
+    UDR0 = 'A';                         // 1글자 직접 전송
+    while (!(UCSR0A & (1 << TXC0)));   // 전송 완료 대기
+    UCSR0A |= (1 << TXC0);             // TXC0 플래그 클리어
+    PORTB &= ~(1 << PB0);
 
-    PORTB |=  (1 << PB0);       // HIGH (측정 시작)
-    while (*msg) {
-        while (!(UCSR0A & (1 << UDRE0))); // 버퍼 대기
-        UDR0 = *msg++;
-    }
-    while (!(UCSR0A & (1 << TXC0)));      // 전송 완료 대기 (stop bit 포함)
-    UCSR0A |= (1 << TXC0);                // TXC0 플래그 클리어
-    PORTB &= ~(1 << PB0);       // LOW  (측정 끝)
-
-    delay(10);                   // UART 안정화 후 출력
+    delay(10);
     Serial.println("  <- Direct");
     Serial.println("----------------");
     delay(2000);
