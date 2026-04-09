@@ -1,48 +1,58 @@
-/* * Title: Timing Measurements for Various Cases
- * Description: Using Direct Port Manipulation to measure code execution time.
- * Probe: Digital Pin 8 (PORTB Bit 0)
- */
+/* Title: Timing Measurements for Various Cases 
+ * Description: Using Direct Port Manipulation to measure code execution time 
+ * Probe: Digital Pin 8 (PORTB Bit 0) */
+
+volatile int a = 100;
+volatile int b = 200;
+volatile int c = 0;
+volatile int adcValue = 0;
+volatile float val = 123.45;
 
 void setup() {
-  // 1. 초기 상태 설정 (가독성 중점)
   pinMode(8, OUTPUT);
   digitalWrite(8, LOW);
-  
+
+  pinMode(A0, INPUT);   // 명시적으로 써도 좋음
+
   Serial.begin(9600);
   Serial.println("Measurement started...");
 }
 
 void loop() {
   // ==========================================
-  // Case 1: Simple Integer Arithmetic
+  // Case 1: Integer Addition
   // ==========================================
-  volatile int a = 100, b = 200, c;
-
-  PORTB |=  (1 << PB0);  // High (측정 시작)
+  PORTB |=  (1 << PB0);   // High
   c = a + b;
-  c = a * b;
-  PORTB &= ~(1 << PB0);  // Low  (측정 종료)
-
-  delayMicroseconds(500); 
-
-  // ==========================================
-  // Case 2: Standard Library Function (Analog Read)
-  // ==========================================
-  PORTB |=  (1 << PB0);  // High
-  analogRead(A0);
-  PORTB &= ~(1 << PB0);  // Low
+  PORTB &= ~(1 << PB0);   // Low
 
   delayMicroseconds(500);
 
   // ==========================================
-  // Case 3: Complex Math (Floating Point)
+  // Case 2: Integer Multiplication
   // ==========================================
-  volatile float val = 123.45;
+  PORTB |=  (1 << PB0);
+  c = a * b;
+  PORTB &= ~(1 << PB0);
 
-  PORTB |=  (1 << PB0);  // High
-  val = sqrt(val); 
-  val = sin(val);  
-  PORTB &= ~(1 << PB0);  // Low
+  delayMicroseconds(500);
 
-  delay(200); // 전체 반복 주기
+  // ==========================================
+  // Case 3: Standard Library Function (analogRead)
+  // ==========================================
+  PORTB |=  (1 << PB0);
+  adcValue = analogRead(A0);
+  PORTB &= ~(1 << PB0);
+
+  delayMicroseconds(500);
+
+  // ==========================================
+  // Case 4: Floating Point Math
+  // ==========================================
+  PORTB |=  (1 << PB0);
+  val = sqrt(val);
+  val = sin(val);
+  PORTB &= ~(1 << PB0);
+
+  delay(200);
 }
