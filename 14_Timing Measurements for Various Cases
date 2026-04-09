@@ -1,0 +1,48 @@
+/* * Title: Timing Measurements for Various Cases
+ * Description: Using Direct Port Manipulation to measure code execution time.
+ * Probe: Digital Pin 8 (PORTB Bit 0)
+ */
+
+void setup() {
+  // 1. 초기 상태 설정 (가독성 중점)
+  pinMode(8, OUTPUT);
+  digitalWrite(8, LOW);
+  
+  Serial.begin(9600);
+  Serial.println("Measurement started...");
+}
+
+void loop() {
+  // ==========================================
+  // Case 1: Simple Integer Arithmetic
+  // ==========================================
+  volatile int a = 100, b = 200, c;
+
+  PORTB |=  (1 << PB0);  // High (측정 시작)
+  c = a + b;
+  c = a * b;
+  PORTB &= ~(1 << PB0);  // Low  (측정 종료)
+
+  delayMicroseconds(500); 
+
+  // ==========================================
+  // Case 2: Standard Library Function (Analog Read)
+  // ==========================================
+  PORTB |=  (1 << PB0);  // High
+  analogRead(A0);
+  PORTB &= ~(1 << PB0);  // Low
+
+  delayMicroseconds(500);
+
+  // ==========================================
+  // Case 3: Complex Math (Floating Point)
+  // ==========================================
+  volatile float val = 123.45;
+
+  PORTB |=  (1 << PB0);  // High
+  val = sqrt(val); 
+  val = sin(val);  
+  PORTB &= ~(1 << PB0);  // Low
+
+  delay(200); // 전체 반복 주기
+}
