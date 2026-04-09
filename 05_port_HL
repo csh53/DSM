@@ -1,15 +1,26 @@
 void setup() {
   pinMode(8, OUTPUT);
+  digitalWrite(8, LOW);   // 초기 상태 LOW
 }
 
 void loop() {
+  // =========================
   // A) digitalWrite() 방식
+  // =========================
   digitalWrite(8, HIGH);
   digitalWrite(8, LOW);
 
-  // B) 레지스터 통한 포트 직접 접근
-  PORTB |=  (1 << PB0); // D8 HIGH
-  PORTB &= ~(1 << PB0); // D8 LOW
+  // 두 구간을 눈으로 구분하기 위한 아주 짧은 간격
+  delayMicroseconds(100);
+
+  // =========================
+  // B) 포트 직접 접근 방식
+  // =========================
+  PORTB |=  (1 << PB0);   // D8 HIGH
+  PORTB &= ~(1 << PB0);   // D8 LOW
+
+  // 한 컷 본 뒤 다음 반복까지 약간 띄우기
+  delay(100);
 }
 
 //Serial.print("elapsed = ");
