@@ -6,14 +6,12 @@ volatile int a = 100;
 volatile int b = 200;
 volatile int c = 0;
 volatile int adcValue = 0;
-volatile float val = 123.45;
+volatile float val = 123.45;  // 기준값 고정 (루프마다 변하지 않음)
 
 void setup() {
   pinMode(8, OUTPUT);
   digitalWrite(8, LOW);
-
-  pinMode(A0, INPUT);   // 명시적으로 써도 좋음
-
+  pinMode(A0, INPUT);
   Serial.begin(9600);
   Serial.println("Measurement started...");
 }
@@ -22,37 +20,44 @@ void loop() {
   // ==========================================
   // Case 1: Integer Addition
   // ==========================================
-  PORTB |=  (1 << PB0);   // High
+  noInterrupts();
+  PORTB |=  (1 << PB0);
   c = a + b;
-  PORTB &= ~(1 << PB0);   // Low
-
+  PORTB &= ~(1 << PB0);
+  interrupts();
   delayMicroseconds(500);
 
   // ==========================================
   // Case 2: Integer Multiplication
   // ==========================================
+  noInterrupts();
   PORTB |=  (1 << PB0);
   c = a * b;
   PORTB &= ~(1 << PB0);
-
+  interrupts();
   delayMicroseconds(500);
 
   // ==========================================
   // Case 3: Standard Library Function (analogRead)
+  // analogRead()는 ADC 변환 대기 포함 → 약 100~260µs 예상
+  // ※ analogRead는 인터럽트가 필요하므로 noInterrupts() 적용 안 함
   // ==========================================
   PORTB |=  (1 << PB0);
   adcValue = analogRead(A0);
   PORTB &= ~(1 << PB0);
-
   delayMicroseconds(500);
 
   // ==========================================
   // Case 4: Floating Point Math
+  // val을 덮어쓰지 않고 result에 저장 → 매 루프마다 동일한 입력값 보장
   // ==========================================
+  float result;
+  noInterrupts();
   PORTB |=  (1 << PB0);
-  val = sqrt(val);
-  val = sin(val);
+  result = sqrt(val);
+  result = sin(result);
   PORTB &= ~(1 << PB0);
-
-  delay(200);
+  interrupts();
+  (void)result;  // 컴파일러 최적화로 연산이 제거되는 것 방지
+  delayMicroseconds(500);  // 다른 케이스와 간격 통일
 }
