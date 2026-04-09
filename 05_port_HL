@@ -23,7 +23,7 @@ void loop() {
   delay(100);
 }
 
-//5 12 13 순으로 진행 그 다음 다양한 함수의 실행시간 체크해 보기
+//5 12 13 14 순으로 진행 그 다음 다양한 함수의 실행시간 체크해 보기
 
 //Serial.print("elapsed = ");
 //Serial.println(elapsed);
