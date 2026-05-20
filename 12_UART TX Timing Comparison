@@ -9,6 +9,9 @@ void setup() {
     // Serial 라이브러리 첫 호출 오버헤드 제거용 워밍업
     Serial.print('A');
     Serial.flush();
+
+    // 혹시 남아 있는 TX 완료 플래그 정리
+    UCSR0A |= (1 << TXC0);
 }
 
 void loop() {
@@ -22,21 +25,21 @@ void loop() {
     }
     PORTB &= ~(1 << PB0);
 
-    delay(5);   // 두 펄스 구분용
+    delay(5);
 
     // =========================
     // 2️⃣ 직접 레지스터 방식
     // =========================
     PORTB |=  (1 << PB0);
     for (int i = 0; i < N; i++) {
-        while (!(UCSR0A & (1 << UDRE0)));
-        UDR0 = 'A';
-        while (!(UCSR0A & (1 << TXC0)));
-        UCSR0A |= (1 << TXC0);
+        while (!(UCSR0A & (1 << UDRE0)));  // UDR0에 쓸 수 있을 때까지 대기
+        UCSR0A |= (1 << TXC0);             // 이전 전송 완료 플래그 제거
+        UDR0 = 'A';                        // 데이터 전송 시작
+        while (!(UCSR0A & (1 << TXC0)));   // 실제 전송 완료 대기
     }
     PORTB &= ~(1 << PB0);
 
-    delay(50);  // 반복 주기 / 오실로스코프 트리거 안정화
+    delay(50);
 }
 
 
