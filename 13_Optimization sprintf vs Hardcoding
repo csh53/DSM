@@ -1,62 +1,120 @@
-// 전역 선언 - volatile로 컴파일러 최적화 방지
+// ==========================================
+// sprintf 방식 vs 직접 문자열 구성 방식 비교
+// Arduino UNO 기준: D8 = PORTB 0번 비트(PB0)
+// 오실로스코프로 D8 펄스 폭을 측정하여 실행 시간 비교
+// ==========================================
+
+#define N           100     // 반복 횟수: 펄스 폭이 짧으면 1000으로 증가 가능
+#define BETWEEN_MS  5       // 두 측정 펄스 사이 간격
+#define LOOP_MS     2000    // 전체 루프 반복 간격
+
 volatile unsigned char val1 = 0xAB;
 volatile unsigned char val2 = 0xCD;
+volatile unsigned char sink = 0;
+
 static char buffer[32];
 
-// 니블 → HEX 문자 변환 함수 (중복 코드 제거)
-inline char nibble_to_hex(unsigned char n) {
+// 니블 → HEX 문자 변환 함수
+__attribute__((always_inline)) inline char nibble_to_hex(unsigned char n) {
     return (n < 10) ? (n + '0') : (n - 10 + 'A');
+}
+
+// 직접 문자열 구성 함수
+__attribute__((always_inline)) inline void make_string_direct(unsigned char a, unsigned char b) {
+    buffer[0] = 'V';
+    buffer[1] = 'A';
+    buffer[2] = 'L';
+    buffer[3] = ':';
+
+    buffer[4] = nibble_to_hex((a >> 4) & 0x0F);
+    buffer[5] = nibble_to_hex(a & 0x0F);
+
+    buffer[6] = nibble_to_hex((b >> 4) & 0x0F);
+    buffer[7] = nibble_to_hex(b & 0x0F);
+
+    buffer[8] = '\0';
 }
 
 void setup() {
     Serial.begin(115200);
     delay(2000);
 
-    // D8 (PORTB 0번 비트) 출력 설정
+    // D8 출력 설정
     pinMode(8, OUTPUT);
     digitalWrite(8, LOW);
 
-    // sprintf warm-up - 첫 호출 라이브러리 로드 비용 제거
-    sprintf(buffer, "%02X", 0);
+    // sprintf 사전 실행: 첫 측정 시 발생할 수 있는 초기 상태 차이 완화
+    sprintf(buffer, "VAL:%02X%02X",
+            (unsigned int)0,
+            (unsigned int)0);
 
     Serial.println("--- Timing Test Start ---");
+    Serial.println("Measure pulse width on D8.");
+    Serial.println();
+
+    // 안내 문구 전송 완료 후 측정 시작
+    Serial.flush();
 }
 
 void loop() {
+    // volatile 변수를 루프 밖에서 한 번만 읽어 측정 조건 통일
+    unsigned char v1 = val1;
+    unsigned char v2 = val2;
+
     // ==========================================
-    // 1️⃣ [sprintf 방식]
+    // 1. sprintf 방식 측정
     // ==========================================
-    PORTB |= (1 << PB0);                             // D8 HIGH (측정 시작)
-    sprintf(buffer, "VAL:%02X%02X", val1, val2);
-    PORTB &= ~(1 << PB0);                            // D8 LOW  (측정 끝)
+
+    PORTB |= (1 << PB0);        // D8 HIGH: 측정 시작
+
+    for (uint16_t i = 0; i < N; i++) {
+        sprintf(buffer, "VAL:%02X%02X",
+                (unsigned int)(unsigned char)(v1 + i),
+                (unsigned int)(unsigned char)(v2 ^ i));
+
+        sink ^= buffer[7];      // 결과 사용 → 최적화 방지
+    }
+
+    PORTB &= ~(1 << PB0);       // D8 LOW: 측정 끝
+
+
+    delay(BETWEEN_MS);
+
+
+    // ==========================================
+    // 2. 직접 문자열 구성 방식 측정
+    // ==========================================
+
+    PORTB |= (1 << PB0);        // D8 HIGH: 측정 시작
+
+    for (uint16_t i = 0; i < N; i++) {
+        make_string_direct((unsigned char)(v1 + i),
+                           (unsigned char)(v2 ^ i));
+
+        sink ^= buffer[7];      // 결과 사용 → 최적화 방지
+    }
+
+    PORTB &= ~(1 << PB0);       // D8 LOW: 측정 끝
+
+
+    // ==========================================
+    // 결과 출력: 측정 구간 밖
+    // ==========================================
 
     Serial.print("sprintf result: ");
+    sprintf(buffer, "VAL:%02X%02X",
+            (unsigned int)v1,
+            (unsigned int)v2);
     Serial.println(buffer);
-    delay(1000);
-
-    // ==========================================
-    // 2️⃣ [하드코딩 방식]
-    // ==========================================
-    PORTB |= (1 << PB0);                             // D8 HIGH (측정 시작)
-
-    buffer[0] = 'V'; buffer[1] = 'A'; buffer[2] = 'L'; buffer[3] = ':';
-
-    unsigned char hi_nibble = (val1 >> 4) & 0x0F;
-    unsigned char lo_nibble =  val1       & 0x0F;
-    buffer[4] = nibble_to_hex(hi_nibble);
-    buffer[5] = nibble_to_hex(lo_nibble);
-
-    hi_nibble = (val2 >> 4) & 0x0F;
-    lo_nibble =  val2       & 0x0F;
-    buffer[6] = nibble_to_hex(hi_nibble);
-    buffer[7] = nibble_to_hex(lo_nibble);
-
-    buffer[8] = '\0';
-
-    PORTB &= ~(1 << PB0);                            // D8 LOW  (측정 끝)
 
     Serial.print("Direct  result: ");
+    make_string_direct(v1, v2);
     Serial.println(buffer);
+
+    Serial.print("sink: 0x");
+    Serial.println(sink, HEX);
+
     Serial.println("-------------------------");
-    delay(2000);
+
+    delay(LOOP_MS);
 }
